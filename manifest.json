@@ -1,0 +1,17 @@
+{
+  "name": "Chat Bromas",
+  "short_name": "Chat Bromas",
+  "description": "Crea conversaciones falsas estilo WhatsApp, Messenger e Instagram para bromear con tus amigos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14171f",
+  "theme_color": "#14171f",
+  "lang": "es",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chat Bromas</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14171f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Chat Bromas">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#14171f;--panel:#1d212c;--line:#2b3140;--tx:#eef0f6;--mut:#98a0b5;--ac:#f0415f}
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--tx);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.app{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:820px){.app{grid-template-columns:380px 1fr;align-items:start}.stage{position:sticky;top:14px}}
+h1{font-size:20px}.sub{color:var(--mut);font-size:13px;margin:2px 0 12px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:10px}
+summary{padding:13px 14px;font-weight:600;cursor:pointer;list-style:none}
+summary::after{content:"＋";float:right;color:var(--mut)}details[open] summary::after{content:"−"}
+.in{padding:0 14px 14px;display:grid;gap:11px}
+label{font-size:13px;color:var(--mut);display:grid;gap:5px}
+input,textarea,select{width:100%;font:inherit;font-size:16px;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+input[type=range]{padding:0;accent-color:var(--ac)}input[type=color]{padding:2px;height:40px;width:48px}
+textarea{resize:vertical;min-height:60px}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.row{display:flex;gap:8px;align-items:end}.row>*{flex:1}
+.btn{border:0;border-radius:10px;padding:11px;font:inherit;font-weight:600;background:var(--ac);color:#fff;cursor:pointer}
+.btn.alt{background:var(--line);color:var(--tx)}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:none;color:var(--mut);padding:9px 4px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ac);color:#fff;font-weight:600}
+.list{display:grid;gap:6px;max-height:220px;overflow:auto}
+.item{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:8px;padding:6px 8px;font-size:13px}
+.item b{font-size:11px;padding:2px 6px;border-radius:6px;background:var(--line);white-space:nowrap}
+.item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item input{padding:6px 8px;font-size:14px}.item input[type=color]{width:38px;height:34px;flex:none}
+.item>button{background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer;padding:0 4px}
+.th{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none}
+.avb{border:0;padding:0;border-radius:50%;cursor:pointer;flex:none;background:none}
+.hint{color:var(--mut);font-size:12px;text-align:center}
+.stage{display:grid;justify-items:center;gap:10px}
+/* teléfono */
+.phone{position:relative;width:100%;max-width:380px;height:640px;border-radius:30px;overflow:hidden;border:6px solid #000;background:var(--cbg);color:var(--ctx)}
+#screen{display:flex;flex-direction:column;height:100%}
+.hd{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--hbg);color:var(--htx);flex:none}
+.av,.mav{border-radius:50%;background:#7a8aa8;color:#fff;display:grid;place-items:center;font-weight:700;overflow:hidden;flex:none}
+.av{width:38px;height:38px}.mav{width:28px;height:28px;font-size:12px}
+.av img,.mav img{width:100%;height:100%;object-fit:cover}
+.who{flex:1;min-width:0;line-height:1.2}.who b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.who small{font-size:12px;opacity:.75}
+.ico{display:flex;align-items:center;gap:14px;font-size:15px}.ico svg{display:block}
+.chat{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:5px;background:var(--cbg) center/cover no-repeat}
+.day{align-self:center;font-size:11px;padding:3px 10px;border-radius:8px;background:var(--day);color:var(--daytx);margin:4px 0 8px}
+.rm{display:flex;gap:6px;align-items:flex-end}.rm.out{justify-content:flex-end}
+.m{max-width:72%;padding:7px 10px;border-radius:var(--r);font-size:14.5px;line-height:1.3;word-wrap:break-word;white-space:pre-wrap}
+.m.in{background:var(--in);color:var(--intx)}.m.out{background:var(--out);color:var(--outtx)}
+.sn{font-size:12px;font-weight:700;margin-bottom:2px}
+.t{display:var(--tm);float:right;font-size:10.5px;opacity:.65;margin:6px 0 -3px 10px}.t i{font-style:normal;color:#53bdeb;margin-left:3px}
+.ft{display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--fbg);flex:none}
+.ft div{flex:1;background:var(--fin);color:var(--mut);border-radius:20px;padding:9px 14px;font-size:14px}
+.ft span{font-size:18px;color:var(--fic)}
+#fl{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.fc{position:absolute;transform:translate(-50%,-50%);border-radius:50%;overflow:hidden;border:3px solid #fff;box-shadow:0 2px 8px #0006;touch-action:none;pointer-events:auto;cursor:grab}
+.fc img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.phone[data-p=wa]{--hbg:#075e54;--htx:#fff;--cbg:#ece5dd;--ctx:#111;--in:#fff;--intx:#111;--out:#dcf8c6;--outtx:#111;--r:8px;--tm:inline;--day:#e1f2fa;--daytx:#555;--fbg:#ece5dd;--fin:#fff;--fic:#075e54}
+.phone[data-p=wa][data-d="1"]{--hbg:#1f2c34;--cbg:#0b141a;--in:#202c33;--intx:#e9edef;--out:#005c4b;--outtx:#e9edef;--day:#182229;--daytx:#8696a0;--fbg:#0b141a;--fin:#202c33;--fic:#00a884}
+.phone[data-p=fb]{--hbg:#fff;--htx:#050505;--cbg:#fff;--ctx:#050505;--in:#f0f2f5;--intx:#050505;--fbg:#fff;--fin:#f0f2f5;--fic:#1877f2;--sec:#65676b;--bd:#dadde1}
+.phone[data-p=fb][data-d="1"]{--hbg:#242526;--htx:#e4e6eb;--cbg:#18191a;--ctx:#e4e6eb;--in:#3a3b3c;--intx:#e4e6eb;--fbg:#242526;--fin:#3a3b3c;--sec:#b0b3b8;--bd:#3e4042}
+.phone[data-p=ig]{--sec:#737373;--bd:#dbdbdb;--hbg:#fff;--htx:#111;--cbg:#fff;--ctx:#111;--in:#efefef;--intx:#111;--out:#8a4cf5;--outtx:#fff;--r:22px;--tm:none;--day:transparent;--daytx:#8e8e8e;--fbg:#fff;--fin:#fff;--fic:#111}
+.phone[data-p=ig][data-d="1"]{--sec:#a8a8a8;--bd:#262626;--hbg:#000;--htx:#f5f5f5;--cbg:#000;--in:#262626;--intx:#f5f5f5;--daytx:#a8a8a8;--fbg:#000;--fin:#000}
+.phone[data-p=ig] .ft div{border:1px solid #cfcfcf;background:transparent}.phone[data-p=ig][data-d="1"] .ft div{border-color:#363636}
+.phone[data-p=ig] .m.out{background:linear-gradient(160deg,#a14cf0,#6a5cf5)}
+@media(min-width:820px){body[data-h=t] .stage,body[data-h=a] .stage{position:static}}
+.phone[data-h=t]{height:1000px}
+.phone[data-h=a]{height:auto;min-height:640px}
+.phone[data-h=a] .chat,.phone[data-h=a] .feed{flex:none;overflow:visible}
+.phone[data-h=a] #screen{height:auto}
+body.cap[data-h=t] .phone{height:1000px}
+body.cap[data-h=a] .phone{height:auto;min-height:100vh}
+body[data-p=wa] .op,body:not([data-p=wa]) .oc{display:none}
+.feed{flex:1;overflow:auto;background:var(--cbg);color:var(--ctx)}
+.ph{display:flex;align-items:center;gap:10px;padding:10px 12px}.ph .who small{color:var(--sec)}
+.pt{padding:4px 12px 10px;font-size:15px;white-space:pre-wrap}
+.pimg{display:block;width:100%;height:auto}
+.ph0{aspect-ratio:1;background:linear-gradient(135deg,#f9a8d4,#a78bfa);display:grid;place-items:center;font-size:48px}
+.st{display:flex;justify-content:space-between;padding:8px 12px;font-size:13px;color:var(--sec)}
+.ac{display:flex;justify-content:space-around;padding:8px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);font-size:14px;color:var(--sec);font-weight:600}
+.ac.ig{justify-content:space-between;border:0;padding:8px 12px;font-size:22px;color:var(--ctx)}
+.cl{padding:12px;display:grid;gap:12px}
+.cm{display:flex;gap:8px;align-items:flex-start}.cm .mav,.ic .mav{width:34px;height:34px;font-size:14px}
+.cb{position:relative;background:var(--in);color:var(--intx);padding:8px 12px;border-radius:18px;font-size:14px;line-height:1.25;display:inline-block;max-width:100%;white-space:pre-wrap}
+.cb b{display:block;font-size:13px}
+.lk{position:absolute;right:-8px;bottom:-9px;background:var(--cbg);border-radius:10px;padding:1px 6px;font-size:11px;box-shadow:0 1px 3px #0004;font-style:normal;color:var(--sec)}
+.ca{font-size:12px;color:var(--sec);padding:4px 0 0 10px}.ca b{font-weight:600}
+.ic{display:flex;gap:10px;align-items:flex-start;font-size:14px}.ib{flex:1;white-space:pre-wrap}.ia{font-size:12px;color:var(--sec);margin-top:2px}.ih{font-size:14px;color:var(--sec)}
+.ct{padding:0 12px 4px;font-size:11px;color:var(--sec)}
+body.cap .side,body.cap .hint{display:none}body.cap .app{grid-template-columns:1fr;padding:0}
+body.cap .phone{max-width:none;height:100vh;border:0;border-radius:0}
+.exit{display:none;position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9;opacity:.5}body.cap .exit{display:block}
+/* recortador */
+#modal{position:fixed;inset:0;background:#000c;display:grid;place-items:center;z-index:20;padding:14px}#modal[hidden]{display:none}
+#modal .box{background:var(--panel);border-radius:16px;padding:16px;display:grid;gap:12px;justify-items:center;max-width:320px;width:100%}
+#cvs{touch-action:none;cursor:grab;background:#000;border:2px solid var(--ac)}
+</style>
+</head>
+<body data-p="wa" data-h="n">
+<div class="app">
+ <div class="side">
+  <h1>Chat Bromas</h1><p class="sub">Chats y publicaciones falsas para reírse con los cuates.</p>
+
+  <details open><summary>Plataforma</summary><div class="in">
+   <div class="seg" id="plat"><button data-v="wa" aria-pressed="true">WhatsApp</button><button data-v="fb" aria-pressed="false">Facebook</button><button data-v="ig" aria-pressed="false">Instagram</button></div>
+   <div class="row"><label>Tema<select id="dark"><option value="0">Claro</option><option value="1">Oscuro</option></select></label><label>Altura de la pantalla<select id="phh"><option value="n">Normal</option><option value="t">Alta</option><option value="a">Se estira (chat largo)</option></select></label></div>
+   <p class="hint">«Se estira» muestra todo el chat sin scroll, para una captura larga.</p>
+  </div></details>
+
+  <details class="oc" open><summary>Chat</summary><div class="in">
+   <div class="row"><label>Nombre del chat<input id="title" value="Las chicas 💖"></label><label>Estado<input id="status" value="Amiga 1, Amiga 2, Amiga 3"></label></div>
+   <div class="row"><label>Tipo<select id="mode"><option value="g">Grupo</option><option value="i">Individual</option></select></label>
+   <label>Foto junto al mensaje<select id="showav"><option value="1">Sí</option><option value="0">No</option></select></label></div>
+   <button class="btn alt" id="hav">Foto del chat</button>
+  </div></details>
+
+  <details class="oc" open><summary>Mensajes</summary><div class="in">
+   <label>Quién escribe<select id="sender"></select></label>
+   <label>Mensaje<textarea id="txt" placeholder="Escribe el mensaje…"></textarea></label>
+   <div class="row"><label>Hora<input id="time" type="time"></label><label>Palomitas azules<select id="read"><option value="1">Sí</option><option value="0">No</option></select></label></div>
+   <button class="btn" id="add">Agregar mensaje</button>
+   <button class="btn alt" id="sep">Agregar separador de día (usa el texto, ej. AYER)</button>
+   <div class="list" id="list"></div>
+   <button class="btn alt" id="clear">Borrar mensajes</button>
+  </div></details>
+
+  <details class="op" open><summary>Publicación</summary><div class="in">
+   <label>Quién publica<select id="pauthor"></select></label>
+   <label>Texto<textarea id="ptext">Hoy fue el mejor día de mi vida 🥳✨</textarea></label>
+   <div class="row"><label>Hace cuánto<input id="ptime" value="2 h"></label><label>Formato de imagen<select id="pratio"><option value="1">Cuadrada</option><option value="1.333">Horizontal</option><option value="0.8">Vertical</option></select></label></div>
+   <div class="row"><button class="btn" id="pimg">Elegir imagen</button><button class="btn alt" id="pclr">Quitar imagen</button></div>
+   <div class="row"><label>Me gusta<input id="plikes" value="1.2 mil"></label><label>Compartidos<input id="pshares" value="5"></label></div>
+   <label>Total de comentarios (vacío = los que agregues)<input id="pncom" placeholder="Ej. 348"></label>
+  </div></details>
+
+  <details class="op" open><summary>Comentarios</summary><div class="in">
+   <label>Quién comenta<select id="csender"></select></label>
+   <label>Comentario<textarea id="ctxt" placeholder="Escribe el comentario…"></textarea></label>
+   <div class="row"><label>Hace cuánto<input id="ctime" value="1 h"></label><label>Me gusta<input id="clikes" type="number" min="0" value="0"></label></div>
+   <button class="btn" id="cadd">Agregar comentario</button>
+   <div class="list" id="clist"></div>
+   <button class="btn alt" id="cclear">Borrar comentarios</button>
+  </div></details>
+
+  <details><summary>Personas</summary><div class="in">
+   <div class="list" id="people"></div>
+   <button class="btn alt" id="addp">＋ Agregar persona</button>
+   <p class="hint">Toca el círculo para poner su foto y acomodarla. La primera eres tú.</p>
+  </div></details>
+
+  <details class="oc"><summary>Fondo de pantalla</summary><div class="in">
+   <button class="btn" id="wall">Elegir imagen de fondo</button>
+   <div class="row"><label>O un color<input type="color" id="wcol" value="#ece5dd"></label><button class="btn alt" id="wclr">Quitar fondo</button></div>
+  </div></details>
+
+  <details><summary>Círculos flotantes</summary><div class="in">
+   <button class="btn" id="addf">＋ Agregar círculo con foto</button>
+   <div class="list" id="fllist"></div>
+   <p class="hint">Arrástralos sobre el teléfono con el dedo. Con la barra cambias su tamaño.</p>
+  </div></details>
+
+  <button class="btn" id="cap" style="width:100%">Modo captura</button>
+ </div>
+
+ <div class="stage">
+  <div class="phone" id="phone"><div id="screen"></div><div id="fl"></div></div>
+  <p class="hint">Usa «Modo captura» y toma una captura de pantalla.</p>
+ </div>
+</div>
+<button class="btn alt exit" id="exit">Salir de captura</button>
+
+<div id="modal" hidden><div class="box">
+ <canvas id="cvs"></canvas>
+ <label style="width:100%">Zoom<input type="range" id="zoom" min="1" max="4" step="0.01" value="1"></label>
+ <p class="hint">Arrastra la imagen para acomodarla.</p>
+ <div class="row" style="width:100%"><button class="btn alt" id="cno">Cancelar</button><button class="btn" id="cok">Usar imagen</button></div>
+</div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,8);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const S={p:'wa',who:'me',me:{id:'me',name:'Tú',color:'#1877f2',img:null},img0:null,post:{img:null},
+ com:[{w:'b',t:'JAJAJA no puede ser 😂',time:'1 h',likes:12},{w:'me',t:'Yo estuve ahí, es real',time:'45 min',likes:3},{w:'c',t:'Exijo explicaciones',time:'20 min',likes:0}],
+ wall:null,wcol:null,hav:null,
+ people:[{id:'a',name:'Amiga 1',color:'#e91e63',img:null},{id:'b',name:'Amiga 2',color:'#7e57c2',img:null},{id:'c',name:'Amiga 3',color:'#ff9800',img:null}],
+ msgs:[{w:'a',t:'¿Ya vieron lo que pasó hoy? 😂',time:'20:01'},{w:'me',t:'No, ¿qué pasó?',time:'20:02',read:1},{w:'b',t:'Mejor ni preguntes jajaja',time:'20:02'}],
+ fl:[]};
+const P=id=>id==='me'?S.me:S.people.find(p=>p.id===id);
+const nm=id=>(P(id)||{name:'?'}).name;
+$('#time').value=now();
+
+/* ---- recortador ---- */
+function crop(file,{aspect=1,round=true,out=300}){return new Promise(res=>{
+ const url=URL.createObjectURL(file),im=new Image();
+ im.onerror=()=>res(null);
+ im.onload=()=>{
+  const W=aspect<1?220:260,H=Math.round(W/aspect),cv=$('#cvs'),x=cv.getContext('2d');
+  cv.width=W;cv.height=H;cv.style.borderRadius=round?'50%':'10px';
+  const base=Math.max(W/im.width,H/im.height);let z=1,ox=(W-im.width*base)/2,oy=(H-im.height*base)/2;
+  $('#zoom').value=1;
+  const fit=()=>{const w=im.width*base*z,h=im.height*base*z;ox=Math.min(0,Math.max(W-w,ox));oy=Math.min(0,Math.max(H-h,oy))};
+  const draw=(c,f)=>c.drawImage(im,ox*f,oy*f,im.width*base*z*f,im.height*base*z*f);
+  const paint=()=>{fit();x.clearRect(0,0,W,H);draw(x,1)};
+  paint();$('#modal').hidden=false;
+  let d=null;
+  cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);d={x:e.clientX,y:e.clientY}};
+  cv.onpointermove=e=>{if(!d)return;ox+=e.clientX-d.x;oy+=e.clientY-d.y;d={x:e.clientX,y:e.clientY};paint()};
+  cv.onpointerup=()=>d=null;
+  $('#zoom').oninput=e=>{const cx=(W/2-ox)/(base*z),cy=(H/2-oy)/(base*z);z=+e.target.value;ox=W/2-cx*base*z;oy=H/2-cy*base*z;paint()};
+  const close=v=>{$('#modal').hidden=true;URL.revokeObjectURL(url);res(v)};
+  $('#cno').onclick=()=>close(null);
+  $('#cok').onclick=()=>{const o=document.createElement('canvas');o.width=out;o.height=Math.round(out/aspect);draw(o.getContext('2d'),out/W);close(o.toDataURL('image/jpeg',.88))};
+ };im.src=url})}
+function pick(opts){return new Promise(res=>{const i=document.createElement('input');i.type='file';i.accept='image/*';
+ i.onchange=()=>{const f=i.files[0];f?crop(f,opts).then(res):res(null)};i.click()})}
+
+/* ---- render ---- */
+const av=(img,name,color,cls)=>`<div class="${cls}" style="background:${color}">${img?`<img src="${img}" alt="">`:esc((name||'?').trim().charAt(0).toUpperCase())}</div>`;
+function chatHTML(){
+ const grp=$('#mode').value==='g',showAv=grp&&$('#showav').value==='1',n=$('#title').value||'Chat';
+ const msgs=S.msgs.map(m=>{
+  if(m.sep)return `<div class="day">${esc(m.t)}</div>`;
+  const me=m.w==='me',p=me?null:P(m.w);if(!me&&!p)return'';
+  const sn=!me&&grp?`<div class="sn" style="color:${p.color}">${esc(p.name)}</div>`:'';
+  const a=!me&&showAv?av(p.img,p.name,p.color,'mav'):'';
+  return `<div class="rm ${me?'out':'in'}">${a}<div class="m ${me?'out':'in'}">${sn}${esc(m.t)}<span class="t">${esc(m.time)}${me&&m.read?'<i>✓✓</i>':''}</span></div></div>`}).join('');
+ return `<div class="hd"><span>‹</span>${av(S.hav,n,'#7a8aa8','av')}<div class="who"><b>${esc(n)}</b><small>${esc($('#status').value)}</small></div><span class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/></svg><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M6.54 5c.06.89.21 1.76.45 2.59l-1.2 1.2c-.41-1.2-.67-2.47-.76-3.79h1.51m9.86 12.02c.85.24 1.72.39 2.6.45v1.5c-1.32-.09-2.59-.35-3.8-.75l1.2-1.2M7.5 3H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.49c0-.55-.45-1-1-1-1.24 0-2.45-.2-3.57-.57-.1-.04-.21-.05-.31-.05-.26 0-.51.1-.71.29l-2.2 2.2c-2.83-1.45-5.15-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1z"/></svg><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></span></div>
+ <div class="chat" id="scr"><div class="day">HOY</div>${msgs}</div>
+ <div class="ft"><span>😊</span><div>Mensaje</div><span>🎤</span></div>`;
+}
+function postHTML(){
+ const fb=S.p==='fb',a=P($('#pauthor').value)||S.me,t=esc($('#ptime').value),txt=esc($('#ptext').value);
+ const likes=esc($('#plikes').value),shares=esc($('#pshares').value),nc=esc($('#pncom').value.trim()||S.com.length);
+ const img=S.post.img?`<img class="pimg" src="${S.post.img}" alt="">`:'';
+ const cs=S.com.map(c=>{const p=P(c.w);if(!p)return'';const l=+c.likes>0;
+  return fb?`<div class="cm">${av(p.img,p.name,p.color,'mav')}<div><div class="cb"><b>${esc(p.name)}</b>${esc(c.t)}${l?`<i class="lk">👍 ${c.likes}</i>`:''}</div><div class="ca"><b>Me gusta</b> · <b>Responder</b> · ${esc(c.time)}</div></div></div>`
+  :`<div class="ic">${av(p.img,p.name,p.color,'mav')}<div class="ib"><b>${esc(p.name)}</b> ${esc(c.t)}<div class="ia">${esc(c.time)}${l?` · ${c.likes} Me gusta`:''} · Responder</div></div><span class="ih">♡</span></div>`}).join('');
+ if(fb)return `<div class="hd"><span>‹</span><div class="who"><b>Publicación de ${esc(a.name)}</b></div><span class="ico">🔍</span></div>
+ <div class="feed" id="scr"><div class="ph">${av(a.img,a.name,a.color,'av')}<div class="who"><b>${esc(a.name)}</b><small>${t} · 🌎</small></div><span>⋯</span></div>
+ ${txt?`<p class="pt">${txt}</p>`:''}${img}
+ <div class="st"><span>👍❤️ ${likes}</span><span>${nc} comentarios${shares?` · ${shares} veces compartido`:''}</span></div>
+ <div class="ac"><span>👍 Me gusta</span><span>💬 Comentar</span><span>↗ Compartir</span></div><div class="cl">${cs}</div></div>
+ <div class="ft">${av(S.me.img,S.me.name,S.me.color,'mav')}<div>Escribe un comentario…</div><span>😊</span></div>`;
+ return `<div class="hd"><span>‹</span><div class="who" style="text-align:center"><b>Publicaciones</b></div><span>⋯</span></div>
+ <div class="feed" id="scr"><div class="ph">${av(a.img,a.name,a.color,'mav')}<b>${esc(a.name)}</b><span style="margin-left:auto">⋯</span></div>
+ ${img||'<div class="pimg ph0">📷</div>'}
+ <div class="ac ig"><span>♡ 💬 ➤</span><span>🔖</span></div>
+ <div class="pt" style="padding-bottom:2px"><b>${likes} Me gusta</b></div>
+ <div class="pt" style="padding-bottom:4px"><b>${esc(a.name)}</b> ${txt}</div><div class="ct">Hace ${t}</div>
+ <div class="cl">${cs}</div></div>
+ <div class="ft">${av(S.me.img,S.me.name,S.me.color,'mav')}<div>Agrega un comentario…</div><span>♡</span></div>`;
+}
+function renderPhone(){
+ const ph=$('#phone'),old=$('#scr'),st=old?old.scrollTop:0,atB=!old||S.tb||old.scrollHeight-old.scrollTop-old.clientHeight<40;S.tb=0;
+ ph.dataset.p=S.p;ph.dataset.d=$('#dark').value;ph.dataset.h=document.body.dataset.h=$('#phh').value;document.body.dataset.p=S.p;
+ $('#screen').innerHTML=S.p==='wa'?chatHTML():postHTML();
+ const c=$('#scr');if(S.p==='wa'){if(S.wcol)c.style.backgroundColor=S.wcol;if(S.wall)c.style.backgroundImage=`url(${S.wall})`;c.scrollTop=atB?c.scrollHeight:st}else c.scrollTop=st;
+ $('#list').innerHTML=S.msgs.map((m,i)=>`<div class="item"><b>${m.sep?'Día':esc(nm(m.w))}</b><span>${esc(m.t)}</span><button data-i="${i}" aria-label="Borrar">×</button></div>`).join('');
+ $('#clist').innerHTML=S.com.map((m,i)=>`<div class="item"><b>${esc(nm(m.w))}</b><span>${esc(m.t)}</span><button data-i="${i}" aria-label="Borrar">×</button></div>`).join('');
+}
+function renderPeople(){
+ $('#people').innerHTML=[S.me,...S.people].map(p=>`<div class="item"><button class="avb" data-a="${p.id}" aria-label="Foto">${av(p.img,p.name,p.color,'th')}</button><input data-n="${p.id}" value="${esc(p.name)}"><input type="color" data-c="${p.id}" value="${p.color}">${p.id==='me'?'<span style="flex:none;width:24px"></span>':`<button data-x="${p.id}" aria-label="Quitar">×</button>`}</div>`).join('');
+ fillSender();
+}
+function fillSender(){const all=[S.me,...S.people],o=all.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+ [['#sender','me'],['#csender','me'],['#pauthor','a']].forEach(([q,d])=>{const e=$(q),v=e.value||d;e.innerHTML=o;e.value=all.some(p=>p.id===v)?v:(d==='a'?(S.people[0]||S.me).id:'me')})}
+function renderFl(){
+ $('#fl').innerHTML=S.fl.map(f=>`<div class="fc" data-id="${f.id}" style="left:${f.x}%;top:${f.y}%;width:${f.s}px;height:${f.s}px"><img src="${f.img}" alt=""></div>`).join('');
+ $('#fllist').innerHTML=S.fl.map(f=>`<div class="item"><img class="th" src="${f.img}" alt=""><input type="range" min="30" max="240" value="${f.s}" data-s="${f.id}" aria-label="Tamaño"><button data-x="${f.id}" aria-label="Quitar">×</button></div>`).join('');
+}
+
+/* ---- eventos ---- */
+$('#plat').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.p=b.dataset.v;$('#screen').innerHTML='';[...$('#plat').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderPhone()});
+['#title','#status','#dark','#phh','#mode','#showav','#pauthor','#ptext','#ptime','#plikes','#pshares','#pncom'].forEach(s=>$(s).addEventListener('input',renderPhone));
+$('#hav').onclick=async()=>{const i=await pick({aspect:1,round:true,out:256});if(i){S.hav=i;renderPhone()}};
+$('#wall').onclick=async()=>{const i=await pick({aspect:.62,round:false,out:720});if(i){S.wall=i;renderPhone()}};
+$('#wcol').addEventListener('input',e=>{S.wcol=e.target.value;renderPhone()});
+$('#wclr').onclick=()=>{S.wall=S.wcol=null;renderPhone()};
+$('#addp').onclick=()=>{const cols=['#e91e63','#7e57c2','#ff9800','#009688','#3f51b5','#e53935'];S.people.push({id:uid(),name:'Persona '+(S.people.length+1),color:cols[S.people.length%cols.length],img:null});renderPeople();renderPhone()};
+$('#people').addEventListener('click',async e=>{
+ const a=e.target.closest('[data-a]'),x=e.target.closest('[data-x]');
+ if(a){const i=await pick({aspect:1,round:true,out:256});if(i){P(a.dataset.a).img=i;renderPeople();renderPhone()}}
+ if(x){S.people=S.people.filter(p=>p.id!==x.dataset.x);S.msgs=S.msgs.filter(m=>m.w!==x.dataset.x);S.com=S.com.filter(m=>m.w!==x.dataset.x);renderPeople();renderPhone()}});
+$('#people').addEventListener('input',e=>{const n=e.target.dataset.n,c=e.target.dataset.c;
+ if(n){P(n).name=e.target.value;fillSender()}if(c){P(c).color=e.target.value}renderPhone()});
+$('#addf').onclick=async()=>{const i=await pick({aspect:1,round:true,out:300});if(i){const k=S.fl.length;S.fl.push({id:uid(),img:i,x:30+(k*18)%45,y:35+(k*14)%40,s:90});renderFl()}};
+$('#fllist').addEventListener('input',e=>{const id=e.target.dataset.s;if(!id)return;const f=S.fl.find(q=>q.id===id);f.s=+e.target.value;const el=$(`.fc[data-id="${id}"]`);el.style.width=el.style.height=f.s+'px'});
+$('#fllist').addEventListener('click',e=>{const x=e.target.closest('[data-x]');if(x){S.fl=S.fl.filter(f=>f.id!==x.dataset.x);renderFl()}});
+let drag=null;
+$('#fl').addEventListener('pointerdown',e=>{const el=e.target.closest('.fc');if(!el)return;el.setPointerCapture(e.pointerId);drag=el;e.preventDefault()});
+$('#fl').addEventListener('pointermove',e=>{if(!drag)return;const ph=$('#phone'),r=ph.getBoundingClientRect();
+ const x=Math.min(100,Math.max(0,(e.clientX-r.left-ph.clientLeft)/ph.clientWidth*100)),y=Math.min(100,Math.max(0,(e.clientY-r.top-ph.clientTop)/ph.clientHeight*100));
+ drag.style.left=x+'%';drag.style.top=y+'%';const f=S.fl.find(q=>q.id===drag.dataset.id);f.x=x;f.y=y});
+['pointerup','pointercancel'].forEach(t=>$('#fl').addEventListener(t,()=>drag=null));
+$('#sender').addEventListener('input',e=>{S.who=e.target.value});
+$('#add').onclick=()=>{const t=$('#txt').value.trim();if(!t)return $('#txt').focus();
+ S.tb=1;S.msgs.push({w:$('#sender').value,t,time:$('#time').value||now(),read:$('#read').value==='1'});$('#txt').value='';renderPhone()};
+$('#list').addEventListener('click',e=>{const i=e.target.dataset.i;if(i!==undefined){S.msgs.splice(+i,1);renderPhone()}});
+$('#clear').onclick=()=>{S.msgs=[];renderPhone()};
+$('#sep').onclick=()=>{S.tb=1;S.msgs.push({sep:1,t:($('#txt').value.trim()||'AYER').toUpperCase()});$('#txt').value='';renderPhone()};
+$('#pimg').onclick=async()=>{const r=+$('#pratio').value,i=await pick({aspect:r,round:false,out:r>=1?800:640});if(i){S.post.img=i;renderPhone()}};
+$('#pclr').onclick=()=>{S.post.img=null;renderPhone()};
+$('#cadd').onclick=()=>{const t=$('#ctxt').value.trim();if(!t)return $('#ctxt').focus();S.com.push({w:$('#csender').value,t,time:$('#ctime').value||'1 h',likes:+$('#clikes').value||0});$('#ctxt').value='';renderPhone()};
+$('#clist').addEventListener('click',e=>{const i=e.target.dataset.i;if(i!==undefined){S.com.splice(+i,1);renderPhone()}});
+$('#cclear').onclick=()=>{S.com=[];renderPhone()};
+$('#cap').onclick=()=>document.body.classList.add('cap');
+$('#exit').onclick=()=>document.body.classList.remove('cap');
+renderPeople();renderPhone();renderFl();
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
