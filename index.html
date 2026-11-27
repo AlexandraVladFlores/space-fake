@@ -59,6 +59,13 @@ textarea{resize:vertical;min-height:60px}
 .m.in{background:var(--in);color:var(--intx)}.m.out{background:var(--out);color:var(--outtx)}
 .sn{font-size:12px;font-weight:700;margin-bottom:2px}
 .t{display:var(--tm);float:right;font-size:10.5px;opacity:.65;margin:6px 0 -3px 10px}.t i{font-style:normal;color:#53bdeb;margin-left:3px}
+.sys{align-self:center;max-width:88%;text-align:center;font-size:12px;line-height:1.3;padding:5px 10px;border-radius:8px;background:var(--day);color:var(--daytx);margin:3px 0}
+.sys.enc{background:#ffeecd;color:#54656f}.phone[data-d="1"] .sys.enc{background:#182229;color:#ffd279}
+.m.del{font-style:italic;opacity:.75}
+.m.img{padding:3px;width:min(240px,72%)}.m.img .sn{padding:2px 5px 0}
+.mw{position:relative;line-height:0}.mi{display:block;width:100%;height:auto;border-radius:6px}
+.t.ov{position:absolute;right:5px;bottom:5px;float:none;margin:0;color:#fff;opacity:1;background:#0005;border-radius:8px;padding:1px 6px;line-height:1.4}
+.cap{padding:4px 5px 1px;line-height:1.3;white-space:pre-wrap}
 .ft{display:flex;gap:8px;align-items:center;padding:8px 10px;background:var(--fbg);flex:none}
 .ft div{flex:1;background:var(--fin);color:var(--mut);border-radius:20px;padding:9px 14px;font-size:14px}
 .ft span{font-size:18px;color:var(--fic)}
@@ -128,10 +135,20 @@ body.cap .phone{max-width:none;height:100vh;border:0;border-radius:0}
    <label>Quién escribe<select id="sender"></select></label>
    <label>Mensaje<textarea id="txt" placeholder="Escribe el mensaje…"></textarea></label>
    <div class="row"><label>Hora<input id="time" type="time"></label><label>Palomitas azules<select id="read"><option value="1">Sí</option><option value="0">No</option></select></label></div>
+   <div class="row"><label>Formato de la foto<select id="mratio"><option value="1.333">Horizontal</option><option value="1">Cuadrada</option><option value="0.8">Vertical</option></select></label><button class="btn alt" id="mpic">📷 Adjuntar foto</button></div>
+   <button class="btn alt" id="mrm" hidden>Quitar foto adjunta</button>
    <button class="btn" id="add">Agregar mensaje</button>
    <button class="btn alt" id="sep">Agregar separador de día (usa el texto, ej. AYER)</button>
    <div class="list" id="list"></div>
    <button class="btn alt" id="clear">Borrar mensajes</button>
+  </div></details>
+
+  <details class="oc"><summary>Avisos del grupo</summary><div class="in">
+   <label>Aviso<select id="ek"><option value="join">Se unió por el enlace</option><option value="add">Alguien añadió a otra persona</option><option value="left">Alguien salió</option><option value="rem">Alguien eliminó a otra persona</option><option value="name">Cambió el nombre del grupo</option><option value="icon">Cambió el ícono del grupo</option><option value="new">Creó el grupo</option><option value="num">Cambió su número</option><option value="enc">Aviso de cifrado</option><option value="del">Mensaje eliminado</option><option value="free">Aviso con texto libre</option></select></label>
+   <div class="row"><label>Quién lo hace<select id="eact"></select></label><label>A quién / quién se une<select id="esub"></select></label></div>
+   <label>Texto (nombre nuevo o aviso libre)<input id="etxt"></label>
+   <button class="btn" id="eadd">Agregar aviso</button>
+   <p class="hint">Se agrega al final. Si lo quieres en otro lugar, súbelo o bájalo con las flechas ↑ ↓ de la lista de mensajes.</p>
   </div></details>
 
   <details class="op" open><summary>Publicación</summary><div class="in">
@@ -228,14 +245,30 @@ function pick(opts){return new Promise(res=>{const i=document.createElement('inp
 
 /* ---- render ---- */
 const av=(img,name,color,cls)=>`<div class="${cls}" style="background:${color}">${img?`<img src="${img}" alt="">`:esc((name||'?').trim().charAt(0).toUpperCase())}</div>`;
+function evText(m){
+ const a=m.a==='me',s=m.s==='me',A=nm(m.a),B=nm(m.s),w=a?'Tú':A;
+ switch(m.k){
+ case 'add':return s?`${A} te añadió`:`${w} ${a?'añadiste':'añadió'} a ${B}`;
+ case 'join':return s?'Te uniste usando el enlace de invitación de este grupo':`${B} se unió usando el enlace de invitación de este grupo`;
+ case 'left':return s?'Saliste':`${B} salió`;
+ case 'rem':return s?`${A} te eliminó`:`${w} ${a?'eliminaste':'eliminó'} a ${B}`;
+ case 'name':return `${w} ${a?'cambiaste':'cambió'} el nombre del grupo a «${m.x}»`;
+ case 'icon':return `${w} ${a?'cambiaste':'cambió'} el ícono de este grupo`;
+ case 'new':return `${w} ${a?'creaste':'creó'} el grupo «${m.x}»`;
+ case 'num':return s?'Cambiaste tu número de teléfono.':`${B} cambió su número de teléfono a uno nuevo. Toca para enviar un mensaje o añadir el nuevo número.`;
+ case 'enc':return 'Los mensajes y las llamadas están cifrados de extremo a extremo. Nadie fuera de este chat, ni siquiera WhatsApp, puede leerlos ni escucharlos. Toca para obtener más información.';
+ default:return m.x||''}}
 function chatHTML(){
  const grp=$('#mode').value==='g',showAv=grp&&$('#showav').value==='1',n=$('#title').value||'Chat';
  const msgs=S.msgs.map(m=>{
   if(m.sep)return `<div class="day">${esc(m.t)}</div>`;
+  if(m.sys)return `<div class="sys${m.k==='enc'?' enc':''}">${esc(evText(m))}</div>`;
   const me=m.w==='me',p=me?null:P(m.w);if(!me&&!p)return'';
   const sn=!me&&grp?`<div class="sn" style="color:${p.color}">${esc(p.name)}</div>`:'';
   const a=!me&&showAv?av(p.img,p.name,p.color,'mav'):'';
-  return `<div class="rm ${me?'out':'in'}">${a}<div class="m ${me?'out':'in'}">${sn}${esc(m.t)}<span class="t">${esc(m.time)}${me&&m.read?'<i>✓✓</i>':''}</span></div></div>`}).join('');
+  const tm=`${esc(m.time)}${me&&m.read?'<i>✓✓</i>':''}`;
+  if(m.img)return `<div class="rm ${me?'out':'in'}">${a}<div class="m img ${me?'out':'in'}">${sn}<div class="mw"><img class="mi" src="${m.img}" alt="">${m.t?'':`<span class="t ov">${tm}</span>`}</div>${m.t?`<div class="cap">${esc(m.t)}<span class="t">${tm}</span></div>`:''}</div></div>`;
+  return `<div class="rm ${me?'out':'in'}">${a}<div class="m ${me?'out':'in'}${m.del?' del':''}">${sn}${esc(m.t)}<span class="t">${tm}</span></div></div>`}).join('');
  return `<div class="hd"><span>‹</span>${av(S.hav,n,'#7a8aa8','av')}<div class="who"><b>${esc(n)}</b><small>${esc($('#status').value)}</small></div><span class="ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/></svg><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M6.54 5c.06.89.21 1.76.45 2.59l-1.2 1.2c-.41-1.2-.67-2.47-.76-3.79h1.51m9.86 12.02c.85.24 1.72.39 2.6.45v1.5c-1.32-.09-2.59-.35-3.8-.75l1.2-1.2M7.5 3H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.49c0-.55-.45-1-1-1-1.24 0-2.45-.2-3.57-.57-.1-.04-.21-.05-.31-.05-.26 0-.51.1-.71.29l-2.2 2.2c-2.83-1.45-5.15-3.76-6.59-6.59l2.2-2.2c.28-.28.36-.67.25-1.02C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1z"/></svg><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></span></div>
  <div class="chat" id="scr"><div class="day">HOY</div>${msgs}</div>
  <div class="ft"><span>😊</span><div>Mensaje</div><span>🎤</span></div>`;
@@ -267,7 +300,7 @@ function renderPhone(){
  ph.dataset.p=S.p;ph.dataset.d=$('#dark').value;ph.dataset.h=document.body.dataset.h=$('#phh').value;document.body.dataset.p=S.p;
  $('#screen').innerHTML=S.p==='wa'?chatHTML():postHTML();
  const c=$('#scr');if(S.p==='wa'){if(S.wcol)c.style.backgroundColor=S.wcol;if(S.wall)c.style.backgroundImage=`url(${S.wall})`;c.scrollTop=atB?c.scrollHeight:st}else c.scrollTop=st;
- $('#list').innerHTML=S.msgs.map((m,i)=>`<div class="item"><b>${m.sep?'Día':esc(nm(m.w))}</b><span>${esc(m.t)}</span><button data-i="${i}" aria-label="Borrar">×</button></div>`).join('');
+ $('#list').innerHTML=S.msgs.map((m,k)=>`<div class="item"><b>${m.sep?'Día':m.sys?'Aviso':esc(nm(m.w))}</b><span>${m.sys?esc(evText(m)):(m.img?'📷 ':'')+esc(m.t)}</span><button data-u="${k}" aria-label="Subir">↑</button><button data-dn="${k}" aria-label="Bajar">↓</button><button data-i="${k}" aria-label="Borrar">×</button></div>`).join('');
  $('#clist').innerHTML=S.com.map((m,i)=>`<div class="item"><b>${esc(nm(m.w))}</b><span>${esc(m.t)}</span><button data-i="${i}" aria-label="Borrar">×</button></div>`).join('');
 }
 function renderPeople(){
@@ -275,7 +308,7 @@ function renderPeople(){
  fillSender();
 }
 function fillSender(){const all=[S.me,...S.people],o=all.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
- [['#sender','me'],['#csender','me'],['#pauthor','a']].forEach(([q,d])=>{const e=$(q),v=e.value||d;e.innerHTML=o;e.value=all.some(p=>p.id===v)?v:(d==='a'?(S.people[0]||S.me).id:'me')})}
+ [['#sender','me'],['#csender','me'],['#pauthor','a'],['#eact','me'],['#esub','a']].forEach(([q,d])=>{const e=$(q),v=e.value||d;e.innerHTML=o;e.value=all.some(p=>p.id===v)?v:(d==='a'?(S.people[0]||S.me).id:'me')})}
 function renderFl(){
  $('#fl').innerHTML=S.fl.map(f=>`<div class="fc" data-id="${f.id}" style="left:${f.x}%;top:${f.y}%;width:${f.s}px;height:${f.s}px"><img src="${f.img}" alt=""></div>`).join('');
  $('#fllist').innerHTML=S.fl.map(f=>`<div class="item"><img class="th" src="${f.img}" alt=""><input type="range" min="30" max="240" value="${f.s}" data-s="${f.id}" aria-label="Tamaño"><button data-x="${f.id}" aria-label="Quitar">×</button></div>`).join('');
@@ -292,7 +325,7 @@ $('#addp').onclick=()=>{const cols=['#e91e63','#7e57c2','#ff9800','#009688','#3f
 $('#people').addEventListener('click',async e=>{
  const a=e.target.closest('[data-a]'),x=e.target.closest('[data-x]');
  if(a){const i=await pick({aspect:1,round:true,out:256});if(i){P(a.dataset.a).img=i;renderPeople();renderPhone()}}
- if(x){S.people=S.people.filter(p=>p.id!==x.dataset.x);S.msgs=S.msgs.filter(m=>m.w!==x.dataset.x);S.com=S.com.filter(m=>m.w!==x.dataset.x);renderPeople();renderPhone()}});
+ if(x){S.people=S.people.filter(p=>p.id!==x.dataset.x);S.msgs=S.msgs.filter(m=>m.w!==x.dataset.x&&m.a!==x.dataset.x&&m.s!==x.dataset.x);S.com=S.com.filter(m=>m.w!==x.dataset.x);renderPeople();renderPhone()}});
 $('#people').addEventListener('input',e=>{const n=e.target.dataset.n,c=e.target.dataset.c;
  if(n){P(n).name=e.target.value;fillSender()}if(c){P(c).color=e.target.value}renderPhone()});
 $('#addf').onclick=async()=>{const i=await pick({aspect:1,round:true,out:300});if(i){const k=S.fl.length;S.fl.push({id:uid(),img:i,x:30+(k*18)%45,y:35+(k*14)%40,s:90});renderFl()}};
@@ -305,9 +338,20 @@ $('#fl').addEventListener('pointermove',e=>{if(!drag)return;const ph=$('#phone')
  drag.style.left=x+'%';drag.style.top=y+'%';const f=S.fl.find(q=>q.id===drag.dataset.id);f.x=x;f.y=y});
 ['pointerup','pointercancel'].forEach(t=>$('#fl').addEventListener(t,()=>drag=null));
 $('#sender').addEventListener('input',e=>{S.who=e.target.value});
-$('#add').onclick=()=>{const t=$('#txt').value.trim();if(!t)return $('#txt').focus();
- S.tb=1;S.msgs.push({w:$('#sender').value,t,time:$('#time').value||now(),read:$('#read').value==='1'});$('#txt').value='';renderPhone()};
-$('#list').addEventListener('click',e=>{const i=e.target.dataset.i;if(i!==undefined){S.msgs.splice(+i,1);renderPhone()}});
+$('#mpic').onclick=async()=>{const r=+$('#mratio').value,i=await pick({aspect:r,round:false,out:r>=1?800:640});if(i){S.pend=i;$('#mrm').hidden=false;$('#mpic').textContent='📷 Foto lista ✓ (cambiar)'}};
+$('#mrm').onclick=()=>{S.pend=null;$('#mrm').hidden=true;$('#mpic').textContent='📷 Adjuntar foto'};
+$('#add').onclick=()=>{const t=$('#txt').value.trim();if(!t&&!S.pend)return $('#txt').focus();
+ const m={w:$('#sender').value,t,time:$('#time').value||now(),read:$('#read').value==='1'};if(S.pend)m.img=S.pend;
+ S.tb=1;S.msgs.push(m);$('#txt').value='';$('#mrm').click();renderPhone()};
+$('#eadd').onclick=()=>{const k=$('#ek').value,a=$('#eact').value;let x=$('#etxt').value.trim();
+ if(k==='free'&&!x)return $('#etxt').focus();if((k==='name'||k==='new')&&!x)x=$('#title').value;
+ S.tb=1;if(k==='del')S.msgs.push({w:a,t:a==='me'?'🚫 Eliminaste este mensaje':'🚫 Se eliminó este mensaje',time:$('#time').value||now(),del:1});
+ else S.msgs.push({sys:1,k,a,s:$('#esub').value,x});$('#etxt').value='';renderPhone()};
+$('#list').addEventListener('click',e=>{const d=e.target.dataset,M=S.msgs;
+ if(d.i!==undefined)M.splice(+d.i,1);
+ else if(d.u!==undefined&&+d.u>0){const k=+d.u;[M[k-1],M[k]]=[M[k],M[k-1]]}
+ else if(d.dn!==undefined&&+d.dn<M.length-1){const k=+d.dn;[M[k+1],M[k]]=[M[k],M[k+1]]}
+ else return;renderPhone()});
 $('#clear').onclick=()=>{S.msgs=[];renderPhone()};
 $('#sep').onclick=()=>{S.tb=1;S.msgs.push({sep:1,t:($('#txt').value.trim()||'AYER').toUpperCase()});$('#txt').value='';renderPhone()};
 $('#pimg').onclick=async()=>{const r=+$('#pratio').value,i=await pick({aspect:r,round:false,out:r>=1?800:640});if(i){S.post.img=i;renderPhone()}};
